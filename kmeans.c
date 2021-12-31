@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include <Python.h>
 
@@ -31,21 +28,27 @@ int check_allocation(const double *p);
 
 void free_memory(double **array, int len);
 
+double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns);
+
+PyObject *transform_2dArray_to_PyObject(double **mat, int rows, int columns);
+
+static PyObject *fit(PyObject *self, PyObject *args);
+
 // args: k, max_iter, epsilon, N, d, array of vectors, mu, output_file
 int main(int argc, char *argv[]) {
     // char *input_file = argv[argc - 2];
-    char *output_file = argv[argc - 1];
-    int max_iter, i, j, q;
-    double eps;
-    double **new_mu, **mu = argv[argc - 2]; // check how to get 2d array from python
-    double **vectors_list = argv[argc - 3]; 
+//    char *output_file = argv[argc - 1];
+//    int max_iter, i, j, q;
+//    double eps;
+//    double **new_mu, **mu = argv[argc - 2]; // check how to get 2d array from python
+//    double **vectors_list = argv[argc - 3];
     // number_of_vectors(input_file);
     // vectors_list = read_file(input_file);
-    k = (int) strtol(argv[1], NULL, 10);
-    max_iter = (int) strtol(argv[2], NULL, 10);
-    eps = (double) strtol(argv[3], NULL, 10);
-    N = (int) strtol(argv[4], NULL, 10);
-    dimension = (int) strtol(argv[5], NULL, 10);
+//    k = (int) strtol(argv[1], NULL, 10);
+//    max_iter = (int) strtol(argv[2], NULL, 10);
+//    eps = (double) strtol(argv[3], NULL, 10);
+//    N = (int) strtol(argv[4], NULL, 10);
+//    dimension = (int) strtol(argv[5], NULL, 10);
     // if (argc == 5) {
     //     max_iter = (int) strtol(argv[2], NULL, 10);
     // }
@@ -53,28 +56,29 @@ int main(int argc, char *argv[]) {
     //     printf("Invalid Input!");
     //     exit(1);
     // }
-    mu = (double **) malloc(k * sizeof(double *));
-    new_mu = (double **) malloc(k * sizeof(double *));
-    initialize_2d_double_array(new_mu, k, dimension);
-    // initialize(vectors_list, mu, new_mu);
-    for (i = 0; i < max_iter; ++i) {
-        reset_clusters(vectors_list, mu, new_mu);
-        eps = calculating_epsilon(mu, new_mu);
-        for (j = 0; j < k; ++j) {
-            for (q=0; q<dimension; ++q){
-                mu[j][q] = new_mu[j][q];
-                new_mu[j][q] = 0;
-            }
-        }
-        if (eps < 0.000001) {
-            break;
-        }
-    }
-    create_output(mu, output_file);
-    free_memory(vectors_list, N);
-    free_memory(mu, k);
-    free_memory(new_mu, k);
-    return 0;
+
+//    mu = (double **) malloc(k * sizeof(double *));
+//    new_mu = (double **) malloc(k * sizeof(double *));
+//    initialize_2d_double_array(new_mu, k, dimension);
+//    // initialize(vectors_list, mu, new_mu);
+//    for (i = 0; i < max_iter; ++i) {
+//        reset_clusters(vectors_list, mu, new_mu);
+//        eps = calculating_epsilon(mu, new_mu);
+//        for (j = 0; j < k; ++j) {
+//            for (q = 0; q < dimension; ++q) {
+//                mu[j][q] = new_mu[j][q];
+//                new_mu[j][q] = 0;
+//            }
+//        }
+//        if (eps < 0.000001) {
+//            break;
+//        }
+//    }
+//    create_output(mu, output_file);
+//    free_memory(vectors_list, N);
+//    free_memory(mu, k);
+//    free_memory(new_mu, k);
+//    return 0;
 }
 
 
@@ -162,11 +166,11 @@ double compute_distance(double vec1[], double vec2[]) {
 //     }
 // }
 
-void initialize_2d_double_array(double *arr[], int d1, int d2){
+void initialize_2d_double_array(double *arr[], int d1, int d2) {
     int i;
-    for (i = 0; i < d2; ++i) {
+    for (i = 0; i < d1; ++i) {
         arr[i] = (double *) calloc(d2, sizeof(double));
-}
+    }
 }
 
 int calc_argmin(double *mu[], double *vector) {
@@ -255,4 +259,103 @@ void free_memory(double **array, int len) {
         free(array[q]);
     }
     free(array);
+}
+
+
+static PyMethodDef k_means_func[] = {
+        {"fit", (PyCFunction) fit, METH_VARARGS, NULL},
+        {NULL, NULL, 0,                          NULL}
+};
+
+static struct PyModuleDef mykmeanssp = {
+        PyModuleDef_HEAD_INIT,
+        "mykmeanssp",
+        NULL,
+        -1,
+        k_means_func
+};
+
+PyMODINIT_FUNC PyInit_mykmeanssp(void) {
+    PyObject *m;
+    m = PyModule_Create(&mykmeanssp);
+    if (!m)
+        return NULL;
+    return m;
+}
+
+
+static PyObject *fit(PyObject *self, PyObject *args) {
+    int max_iter;
+    double eps, **centroids, **data_points, **final_centroids;
+    PyObject *centroids_copy, *data_points_copy;
+    if (!PyArg_ParseTuple(args, "iiiidOO", &k, &dimension, &N, &max_iter, &eps, &centroids_copy, &data_points_copy)) {
+        return NULL;
+    }
+    initialize_2d_double_array(final_centroids, k, dimension);
+    centroids = transform_PyObject_to_2dArray(centroids_copy, k, dimension);
+    data_points = transform_PyObject_to_2dArray(data_points_copy, N, dimension);
+
+    reset_clusters(data_points, centroids, final_centroids);
+    centroids_copy = transform_2dArray_to_PyObject(final_centroids, k, dimension);
+    free_memory(final_centroids, k);
+    free_memory(centroids, k);
+    free_memory(data_points, N);
+    return centroids_copy;
+}
+
+double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
+    double **new_mat;
+    PyObject *row;
+    int i, j;
+    initialize_2d_double_array(new_mat, rows, columns);
+    for (i = 0; i < rows; ++i) {
+        row = PyList_GetItem(mat, i);
+        for (j = 0; j < columns; ++j) {
+            new_mat[i][j] = PyFloat_AsDouble(PyList_GetItem(row, j));
+        }
+    }
+    return new_mat;
+}
+
+PyObject *transform_2dArray_to_PyObject(double **mat, int rows, int columns) {
+    PyObject *new_mat, *row;
+    int i, j;
+
+    new_mat = PyList_New(rows);
+    for (i = 0; i < rows; ++i) {
+        row = PyList_New(columns);
+        for (j = 0; j < columns; ++j) {
+            PyList_SetItem(row, j, Py_BuildValue("f", mat[i][j]));
+        }
+        PyList_SetItem(new_mat, i, row);
+    }
+    return new_mat;
+}
+
+
+static PyMethodDef Kmeans_Methods[] = {
+        {"fit",
+                (PyCFunction) fit,
+                METH_VARARGS,
+                        NULL},
+        {NULL, NULL, 0, NULL}
+};
+
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "mykmeanssp",
+        NULL,
+        -1,
+        Kmeans_Methods
+};
+
+PyMODINIT_FUNC
+PyInit_kmeans(void) {
+    PyObject *m;
+    m = PyModule_Create(&moduledef);
+    if (!m) {
+        return NULL;
+    }
+    return m;
 }
