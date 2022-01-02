@@ -227,21 +227,21 @@ double calculating_epsilon(double *mu[], double *new_mu[]) {
     return eps;
 }
 
-void create_output(double *mu[], char op_filename[]) {
-    FILE *f;
-    int i, j;
-    f = fopen(op_filename, "w");
-    for (i = 0; i < k; ++i) {
-        for (j = 0; j < dimension; ++j) {
-            fprintf(f, "%0.4f", mu[i][j]);
-            if (j != dimension - 1) {
-                fprintf(f, ",");
-            }
-        }
-        fprintf(f, "\n");
-    }
-    fclose(f);
-}
+//void create_output(double *mu[], char op_filename[]) {
+//    FILE *f;
+//    int i, j;
+//    f = fopen(op_filename, "w");
+//    for (i = 0; i < k; ++i) {
+//        for (j = 0; j < dimension; ++j) {
+//            fprintf(f, "%0.4f", mu[i][j]);
+//            if (j != dimension - 1) {
+//                fprintf(f, ",");
+//            }
+//        }
+//        fprintf(f, "\n");
+//    }
+//    fclose(f);
+//}
 
 
 int check_allocation(const double *p) {
@@ -288,15 +288,22 @@ static PyObject *fit(PyObject *self, PyObject *args) {
     int max_iter;
     double eps, **centroids, **data_points, **final_centroids;
     PyObject *centroids_copy, *data_points_copy;
+    printf("Enters_fit\n");
     if (!PyArg_ParseTuple(args, "iiiidOO", &k, &dimension, &N, &max_iter, &eps, &centroids_copy, &data_points_copy)) {
         return NULL;
     }
+    printf("Parsed PyArgs\n");
     initialize_2d_double_array(final_centroids, k, dimension);
+    printf("initialize 2d double array\n");
     centroids = transform_PyObject_to_2dArray(centroids_copy, k, dimension);
+    printf("transform PyObject to 2dArray on centroids_copy\n");
     data_points = transform_PyObject_to_2dArray(data_points_copy, N, dimension);
+    printf("transform PyObject to 2dArray on data_points_copy\n");
 
     reset_clusters(data_points, centroids, final_centroids);
+    printf("reset_clusters\n");
     centroids_copy = transform_2dArray_to_PyObject(final_centroids, k, dimension);
+    printf("transform 2dArray to PyObject final centroids\n");
     free_memory(final_centroids, k);
     free_memory(centroids, k);
     free_memory(data_points, N);
@@ -305,13 +312,20 @@ static PyObject *fit(PyObject *self, PyObject *args) {
 
 double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
     double **new_mat;
-    PyObject *row;
+    PyObject *row, *column;
     int i, j;
+    new_mat = (double **) malloc(k * sizeof(double *));
     initialize_2d_double_array(new_mat, rows, columns);
     for (i = 0; i < rows; ++i) {
+        printf("i = %d\n", i);
         row = PyList_GetItem(mat, i);
+        printf("Py_List_GetItem for row succeeded\n");
         for (j = 0; j < columns; ++j) {
-            new_mat[i][j] = PyFloat_AsDouble(PyList_GetItem(row, j));
+            printf("j = %d\n", j);
+            column = PyList_GetItem(row, j);
+            printf("PyList_GetItem for column succeeded");
+            new_mat[i][j] = PyFloat_AsDouble(column);
+            printf("located value in new_mat\n");
         }
     }
     return new_mat;

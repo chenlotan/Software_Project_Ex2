@@ -3,7 +3,6 @@ import pandas as pd
 import sys
 from mykmeanssp import fit
 
-
 def validate(condition):
     if not condition:
         print('Invalid Input!')
@@ -37,9 +36,10 @@ def initialize_centroids(vectors, k):
         p = D/np.sum(D)
         mu_index[i] = np.random.choice(N, p=p)
         mu[i] = vectors[int(mu_index[i])]
-    return mu_index.astype(int)
+    return mu_index.astype(int), mu
 
 
+sys.path.append("C:/Users/chen/Desktop/Chen/Semester_A/Software Project/Project_Ex2")
 args = sys.argv[1:]
 validate(4 <= len(args) <= 5)
 k, max_iter, epsilon, input1_filename, input2_filename = args[0], args[1] if len(args) == 5 else 300, args[-3], args[-2], args[-1]
@@ -54,9 +54,9 @@ epsilon = float(epsilon)
 df1 = read_file_to_df(input1_filename)
 df2 = read_file_to_df(input2_filename)
 vectors = pd.merge(df1, df2, on=0).sort_values(by=0).iloc[:, 2:].to_numpy()
-centroids = initialize_centroids(vectors, k)
+centroids_index, centroids = initialize_centroids(vectors, k)
+print(centroids)
 final_centroids = fit(k, vectors.shape[1], vectors.shape[0], max_iter, epsilon, centroids, vectors)
 
 # centroid = fit(k,dimension, N = vectors.shape[0], max_iter, epsilon, centroids array, all_vectors)  give all the parameters by the order in c and print
-print(centroids)
 print(final_centroids)
