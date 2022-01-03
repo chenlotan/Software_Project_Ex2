@@ -12,7 +12,7 @@ int dimension, k, N;
 
 // void initialize(double **vectors_list, double *mu[], double *new_mu[]);
 
-void initialize_2d_double_array(double *arr[], int d1, int d2);
+double **initialize_2d_double_array(double *arr[], int d1, int d2);
 
 int calc_argmin(double *mu[], double *vector);
 
@@ -166,11 +166,13 @@ double compute_distance(double vec1[], double vec2[]) {
 //     }
 // }
 
-void initialize_2d_double_array(double *arr[], int d1, int d2) {
+double **initialize_2d_double_array(double **arr, int d1, int d2) {
     int i;
+    arr = (double **) malloc(d1 * sizeof(double *));
     for (i = 0; i < d1; ++i) {
         arr[i] = (double *) calloc(d2, sizeof(double));
     }
+    return arr;
 }
 
 int calc_argmin(double *mu[], double *vector) {
@@ -288,13 +290,16 @@ static PyObject *fit(PyObject *self, PyObject *args) {
     int max_iter;
     double eps, **centroids, **data_points, **final_centroids;
     PyObject *centroids_copy, *data_points_copy;
-    printf("Enters_fit\n");
+    printf("Entered_fit\n");
     if (!PyArg_ParseTuple(args, "iiiidOO", &k, &dimension, &N, &max_iter, &eps, &centroids_copy, &data_points_copy)) {
         return NULL;
     }
+    if (!(PyList_Check(centroids_copy))||!(PyList_Check(data_points_copy))){
+        printf("Error in Types of Arguments");
+    }
     printf("Parsed PyArgs\n");
-    initialize_2d_double_array(final_centroids, k, dimension);
-    printf("initialize 2d double array\n");
+    final_centroids = initialize_2d_double_array(final_centroids, k, dimension);
+    printf("initialize 2d double array for final centroids\n");
     centroids = transform_PyObject_to_2dArray(centroids_copy, k, dimension);
     printf("transform PyObject to 2dArray on centroids_copy\n");
     data_points = transform_PyObject_to_2dArray(data_points_copy, N, dimension);
@@ -314,18 +319,17 @@ double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
     double **new_mat;
     PyObject *row, *column;
     int i, j;
-    new_mat = (double **) malloc(k * sizeof(double *));
-    initialize_2d_double_array(new_mat, rows, columns);
+    new_mat = initialize_2d_double_array(new_mat, rows, columns);
     for (i = 0; i < rows; ++i) {
-        printf("i = %d\n", i);
+//        printf("i = %zd\n", i);
         row = PyList_GetItem(mat, i);
-        printf("Py_List_GetItem for row succeeded\n");
+//        printf("Py_List_GetItem for row succeeded\n");
         for (j = 0; j < columns; ++j) {
-            printf("j = %d\n", j);
+//            printf("j = %zd\n", j);
             column = PyList_GetItem(row, j);
-            printf("PyList_GetItem for column succeeded");
+//            printf("PyList_GetItem for col");
             new_mat[i][j] = PyFloat_AsDouble(column);
-            printf("located value in new_mat\n");
+//            printf("located value in new_mat\n");
         }
     }
     return new_mat;
@@ -334,7 +338,6 @@ double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
 PyObject *transform_2dArray_to_PyObject(double **mat, int rows, int columns) {
     PyObject *new_mat, *row;
     int i, j;
-
     new_mat = PyList_New(rows);
     for (i = 0; i < rows; ++i) {
         row = PyList_New(columns);

@@ -29,6 +29,7 @@ def initialize_centroids(vectors, k):
     mu_index = np.zeros(k)
     np.random.seed(0)
     N = vectors.shape[0]
+    print(vectors.shape[1])
     mu_index[0] = np.random.choice(N)
     mu[0] = vectors[(int(mu_index[0]))]
     for i in range(1, k):
@@ -36,7 +37,7 @@ def initialize_centroids(vectors, k):
         p = D/np.sum(D)
         mu_index[i] = np.random.choice(N, p=p)
         mu[i] = vectors[int(mu_index[i])]
-    return mu_index.astype(int), mu
+    return mu_index.astype(int), mu.astype(float)
 
 
 sys.path.append("C:/Users/chen/Desktop/Chen/Semester_A/Software Project/Project_Ex2")
@@ -53,10 +54,12 @@ k = int(k)
 epsilon = float(epsilon)
 df1 = read_file_to_df(input1_filename)
 df2 = read_file_to_df(input2_filename)
-vectors = pd.merge(df1, df2, on=0).sort_values(by=0).iloc[:, 2:].to_numpy()
+vectors = pd.merge(df1, df2, on=0).sort_values(by=0).iloc[:, 1:].to_numpy()
 centroids_index, centroids = initialize_centroids(vectors, k)
 print(centroids)
-final_centroids = fit(k, vectors.shape[1], vectors.shape[0], max_iter, epsilon, centroids, vectors)
+print(type(centroids.tolist()[0][0]), k,  vectors.shape[1],vectors.shape[0])
+final_centroids = fit(k, vectors.shape[1], vectors.shape[0], max_iter, epsilon, centroids.tolist(), vectors.tolist())
 
 # centroid = fit(k,dimension, N = vectors.shape[0], max_iter, epsilon, centroids array, all_vectors)  give all the parameters by the order in c and print
+print(centroids_index)
 print(final_centroids)
