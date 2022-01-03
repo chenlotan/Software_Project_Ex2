@@ -29,7 +29,7 @@ def initialize_centroids(vectors, k):
     mu_index = np.zeros(k)
     np.random.seed(0)
     N = vectors.shape[0]
-    print(vectors.shape[1])
+    # print(vectors.shape[1])
     mu_index[0] = np.random.choice(N)
     mu[0] = vectors[(int(mu_index[0]))]
     for i in range(1, k):
@@ -40,7 +40,7 @@ def initialize_centroids(vectors, k):
     return mu_index.astype(int), mu.astype(float)
 
 
-sys.path.append("C:/Users/chen/Desktop/Chen/Semester_A/Software Project/Project_Ex2")
+sys.path.append("C:/Users/97250/CLionProjects/Software_Project_Ex2")
 args = sys.argv[1:]
 validate(4 <= len(args) <= 5)
 k, max_iter, epsilon, input1_filename, input2_filename = args[0], args[1] if len(args) == 5 else 300, args[-3], args[-2], args[-1]
@@ -56,10 +56,20 @@ df1 = read_file_to_df(input1_filename)
 df2 = read_file_to_df(input2_filename)
 vectors = pd.merge(df1, df2, on=0).sort_values(by=0).iloc[:, 1:].to_numpy()
 centroids_index, centroids = initialize_centroids(vectors, k)
-print(centroids)
-print(type(centroids.tolist()[0][0]), k,  vectors.shape[1],vectors.shape[0])
+# print(centroids)
+# print(type(centroids.tolist()[0][0]), k,  vectors.shape[1],vectors.shape[0])
 final_centroids = fit(k, vectors.shape[1], vectors.shape[0], max_iter, epsilon, centroids.tolist(), vectors.tolist())
-
 # centroid = fit(k,dimension, N = vectors.shape[0], max_iter, epsilon, centroids array, all_vectors)  give all the parameters by the order in c and print
-print(centroids_index)
-print(final_centroids)
+# print(centroids_index)
+for i in range(len(centroids_index)):
+    if i < len(centroids_index) - 1:
+        print(str(centroids_index[i]) + ",", end="")
+    else:
+        print(str(centroids_index[i]))
+for i in range(len(final_centroids)):
+    for j in range(len(final_centroids[0])):
+            if j < len(final_centroids[0]) - 1:
+                print(str("{0:.4f}".format(final_centroids[i][j])) + ",", end="")
+            else:
+                print(str("{0:.4f}".format(final_centroids[i][j])))
+# print(final_centroids)
