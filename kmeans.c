@@ -313,7 +313,7 @@ static PyObject *fit(PyObject *self, PyObject *args) {
             break;
         }
     }
-        centroids_copy = transform_2dArray_to_PyObject(final_centroids, k, dimension);
+        centroids_copy = transform_2dArray_to_PyObject(centroids, k, dimension);
         free_memory(final_centroids, k);
         free_memory(centroids, k);
         free_memory(data_points, N);
