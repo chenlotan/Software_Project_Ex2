@@ -12,6 +12,8 @@ double compute_distance(double vec1[], double vec2[]);
 
 void reset_clusters(double **vectors_list, double *mu[], double *new_sum[]);
 
+double calculating_epsilon(double *mu[], double *new_mu[]);
+
 int check_allocation(const double *p);
 
 void free_memory(double **array, int len);
@@ -21,6 +23,7 @@ double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns);
 PyObject *transform_2dArray_to_PyObject(double **mat, int rows, int columns);
 
 static PyObject *fit(PyObject *self, PyObject *args);
+
 
 
 double compute_distance(double vec1[], double vec2[]) {
@@ -82,6 +85,18 @@ void reset_clusters(double **vectors_list, double *mu[], double *new_sum[]) {
         }
     }
     free(count);
+}
+
+double calculating_epsilon(double *mu[], double *new_mu[]) {
+    double eps = 0, dist;
+    int i;
+    for (i = 0; i < k; ++i) {
+        dist = compute_distance(mu[i], new_mu[i]);
+        if (eps < dist) {
+            eps = dist;
+        }
+    }
+    return eps;
 }
 
 
@@ -152,66 +167,66 @@ static PyObject *fit(PyObject *self, PyObject *args) {
             break;
         }
     }
-        centroids_copy = transform_2dArray_to_PyObject(centroids, k, dimension);
-        free_memory(final_centroids, k);
-        free_memory(centroids, k);
-        free_memory(data_points, N);
-        return centroids_copy;
-    }
+    centroids_copy = transform_2dArray_to_PyObject(final_centroids, k, dimension);
+    free_memory(final_centroids, k);
+    free_memory(centroids, k);
+    free_memory(data_points, N);
+    return centroids_copy;
+}
 
-    double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
-        double **new_mat;
-        PyObject *row, *column;
-        int i, j;
-        new_mat = initialize_2d_double_array(new_mat, rows, columns);
-        for (i = 0; i < rows; ++i) {
-            row = PyList_GetItem(mat, i);
-            for (j = 0; j < columns; ++j) {
-                column = PyList_GetItem(row, j);
-                new_mat[i][j] = PyFloat_AsDouble(column);
-            }
+double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
+    double **new_mat;
+    PyObject *row, *column;
+    int i, j;
+    new_mat = initialize_2d_double_array(new_mat, rows, columns);
+    for (i = 0; i < rows; ++i) {
+        row = PyList_GetItem(mat, i);
+        for (j = 0; j < columns; ++j) {
+            column = PyList_GetItem(row, j);
+            new_mat[i][j] = PyFloat_AsDouble(column);
         }
-        return new_mat;
     }
+    return new_mat;
+}
 
-    PyObject *transform_2dArray_to_PyObject(double **mat, int rows, int columns) {
-        PyObject *new_mat, *row;
-        int i, j;
-        new_mat = PyList_New(rows);
-        for (i = 0; i < rows; ++i) {
-            row = PyList_New(columns);
-            for (j = 0; j < columns; ++j) {
-                PyList_SetItem(row, j, Py_BuildValue("f", mat[i][j]));
-            }
-            PyList_SetItem(new_mat, i, row);
+PyObject *transform_2dArray_to_PyObject(double **mat, int rows, int columns) {
+    PyObject *new_mat, *row;
+    int i, j;
+    new_mat = PyList_New(rows);
+    for (i = 0; i < rows; ++i) {
+        row = PyList_New(columns);
+        for (j = 0; j < columns; ++j) {
+            PyList_SetItem(row, j, Py_BuildValue("f", mat[i][j]));
         }
-        return new_mat;
+        PyList_SetItem(new_mat, i, row);
     }
+    return new_mat;
+}
 
 
-    static PyMethodDef Kmeans_Methods[] = {
-            {"fit",
-                    (PyCFunction) fit,
-                    METH_VARARGS,
-                            NULL},
-            {NULL, NULL, 0, NULL}
-    };
+static PyMethodDef Kmeans_Methods[] = {
+        {"fit",
+                (PyCFunction) fit,
+                     METH_VARARGS,
+                        NULL},
+        {NULL, NULL, 0, NULL}
+};
 
 
-    static struct PyModuleDef moduledef = {
-            PyModuleDef_HEAD_INIT,
-            "mykmeanssp",
-            NULL,
-            -1,
-            Kmeans_Methods
-    };
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "mykmeanssp",
+        NULL,
+        -1,
+        Kmeans_Methods
+};
 
-    PyMODINIT_FUNC
-    PyInit_kmeans(void) {
-        PyObject *m;
-        m = PyModule_Create(&moduledef);
-        if (!m) {
-            return NULL;
-        }
-        return m;
+PyMODINIT_FUNC
+PyInit_kmeans(void) {
+    PyObject *m;
+    m = PyModule_Create(&moduledef);
+    if (!m) {
+        return NULL;
     }
+    return m;
+}
