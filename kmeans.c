@@ -288,7 +288,7 @@ PyMODINIT_FUNC PyInit_mykmeanssp(void) {
 
 static PyObject *fit(PyObject *self, PyObject *args) {
     int max_iter, i, j, q;
-    double eps, curr_eps, **centroids, **data_points, **final_centroids;
+    double eps, curr_eps, **centroids, **data_points, **final_centroids = NULL;
     PyObject *centroids_copy, *data_points_copy;
     if (!PyArg_ParseTuple(args, "iiiidOO", &k, &dimension, &N, &max_iter, &eps, &centroids_copy, &data_points_copy)) {
         return NULL;
@@ -321,7 +321,7 @@ static PyObject *fit(PyObject *self, PyObject *args) {
     }
 
     double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
-        double **new_mat;
+        double **new_mat = NULL;
         PyObject *row, *column;
         int i, j;
         new_mat = initialize_2d_double_array(new_mat, rows, columns);
