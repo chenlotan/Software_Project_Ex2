@@ -290,15 +290,19 @@ static PyObject *fit(PyObject *self, PyObject *args) {
     int max_iter, i, j, q;
     double eps, curr_eps, **centroids, **data_points, **final_centroids;
     PyObject *centroids_copy, *data_points_copy;
+    printf("Entered fit\n");
     if (!PyArg_ParseTuple(args, "iiiidOO", &k, &dimension, &N, &max_iter, &eps, &centroids_copy, &data_points_copy)) {
         return NULL;
     }
     if (!(PyList_Check(centroids_copy)) || !(PyList_Check(data_points_copy))) {
-        printf("Error in Types of Arguments");
+        printf("Error in Types of Arguments\n");
     }
     final_centroids = initialize_2d_double_array(final_centroids, k, dimension);
+    printf("Initialized Centroids\n");
     centroids = transform_PyObject_to_2dArray(centroids_copy, k, dimension);
+    printf("Transformed PyObject to 2dArray centroids\n");
     data_points = transform_PyObject_to_2dArray(data_points_copy, N, dimension);
+    printf("Transformed PyObject to 2dArray data points\n");
 
     for (i = 0; i < max_iter; ++i) {
         reset_clusters(data_points, centroids, final_centroids);
@@ -313,11 +317,12 @@ static PyObject *fit(PyObject *self, PyObject *args) {
             break;
         }
     }
-        centroids_copy = transform_2dArray_to_PyObject(centroids, k, dimension);
-        free_memory(final_centroids, k);
-        free_memory(centroids, k);
-        free_memory(data_points, N);
-        return centroids_copy;
+    centroids_copy = transform_2dArray_to_PyObject(centroids, k, dimension);
+    printf("centroids to PyObject\n");
+    free_memory(final_centroids, k);
+    free_memory(centroids, k);
+    free_memory(data_points, N);
+    return centroids_copy;
     }
 
     double **transform_PyObject_to_2dArray(PyObject *mat, int rows, int columns) {
