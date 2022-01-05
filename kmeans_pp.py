@@ -55,7 +55,6 @@ df1 = read_file_to_df(input1_filename)
 df2 = read_file_to_df(input2_filename)
 vectors = pd.merge(df1, df2, on=0).sort_values(by=0).iloc[:, 1:].to_numpy()
 centroids_index, centroids = initialize_centroids(vectors, k)
-print("Python until fit")
 final_centroids = fit(k, vectors.shape[1], vectors.shape[0], max_iter, epsilon, centroids.tolist(), vectors.tolist())
 
 
